@@ -5,7 +5,11 @@
 		[Header(Decal Main Texture)] [Space(10)]
 		[HDR] _MainColor("Main Color", Color) = (0.5,0.5,0.5,1)
 		[NoScaleOffset] _MainTex("Main Texture", 2D) = "white" {}
+
+		[Space(20)]
+		[Header(Decal Time Setting)] [Space(10)]
 		_TileScale("Main Scale", Float) = 1
+		_TileRotation("Texture Y Rotation", Float) = 0
 
 		[Space(20)]
 		[Header(Surface Input)] [Space(10)]
@@ -77,6 +81,8 @@
 			#include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
 
 			float _TileScale;
+			float _TileRotation;
+
 			float _Progress;
 			float _Specular;
 			float _Occlusion;
@@ -148,7 +154,11 @@
 				float sceneZ = LinearEyeDepth(depth, _ZBufferParams);
 
 				float3 wpos = direction * sceneZ + _WorldSpaceCameraPos;
-				input.uv = float4(wpos.xz * _TileScale + 0.5, 0, 0);
+				float2 uv = wpos.xz * _TileScale;
+
+				float2 sc;
+				sincos((_TileRotation / 180 * 3.14159), sc.x, sc.y);
+				input.uv = float4(float2(dot(uv, float2(sc.y, -sc.x)), dot(uv, sc.xy)) + 0.5, 0, 0);
 
 				half4 baseColor = UNITY_ACCESS_INSTANCED_PROP(Props, _MainColor);
 				half4 albedoAlpha = SampleAlbedoAlpha(input.uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap));
